@@ -19,6 +19,7 @@ include_directories(
     include
     external/imgui
     external/imgui/backends
+    external/tinyfiledialogs
     ${OpenCV_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${GLFW_INCLUDE_DIRS}
@@ -40,6 +41,7 @@ file(GLOB_RECURSE SRC_FILES
     src/core/*.cpp
     src/ui/*.cpp
     src/main.cpp
+    external/tinyfiledialogs/tinyfiledialogs.c
 )
 
 # Add executable
@@ -51,3 +53,6 @@ target_link_libraries(NodeBasedImageEditor
     ${GLFW_LIBRARY}
     ${OPENGL_gl_LIBRARY}
 )
+
+# Compile definitions
+add_compile_definitions(GL_SILENCE_DEPRECATION)
