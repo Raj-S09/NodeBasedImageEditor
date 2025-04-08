@@ -1,4 +1,4 @@
-#include "Node.h"
+#include "core/Node.h"
 
 Node::Node(int id, const std::string &name, Type type)
     : id(id), name(name), type(type) {}

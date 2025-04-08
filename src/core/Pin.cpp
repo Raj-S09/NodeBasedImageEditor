@@ -1,5 +1,5 @@
-#include "Pin.h"
-#include "Node.h"
+#include "core/Pin.h"
+#include "core/Node.h"
 
 Pin::Pin(int id, const std::string &name, PinType type, std::shared_ptr<Node> owner)
     : id(id), name(name), type(type), owner(owner) {}

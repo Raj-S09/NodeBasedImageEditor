@@ -1,4 +1,4 @@
-#include "Channel.h"
+#include "core/Channel.h"
 
 Channel::Channel(const cv::Mat &data, const std::string &label)
     : data(data), label(label) {}

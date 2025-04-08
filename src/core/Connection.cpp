@@ -1,4 +1,4 @@
-#include "Connection.h"
+#include "core/Connection.h"
 
 Connection::Connection(std::shared_ptr<Pin> from, std::shared_ptr<Pin> to)
     : fromPin(from), toPin(to) {}
