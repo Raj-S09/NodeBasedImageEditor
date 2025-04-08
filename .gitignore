@@ -1,3 +1,11 @@
+# Build artifacts
+/build/
+/CMakeFiles/
+/cmake-build-*/
+/Makefile
+CMakeCache.txt
+cmake_install.cmake
+
 # Prerequisites
 *.d
 
