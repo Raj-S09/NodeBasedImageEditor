@@ -1,4 +1,7 @@
 #include <iostream>
+#include <opencv2/opencv.hpp>
+#include <map>
+#include <string>
 
 // ImGui and backends
 #include <imgui.h>
@@ -69,6 +72,7 @@ int main()
 
     // UI state
     Canvas canvas;
+    static std::map<std::string, GLuint> imageTextures;
     PropertiesPanel propertiesPanel;
 
     // Main loop
@@ -81,30 +85,44 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (ImGui::BeginMainMenuBar())
-        {
-            if (ImGui::BeginMenu("Add"))
-            {
-                if (ImGui::MenuItem("Image Input Node"))
-                {
-                    const char *filters[] = {"*.jpg", "*.png", "*.bmp", "*.jpeg"};
-                    const char *filePath = tinyfd_openFileDialog("Select Image", "", 4, filters, NULL, 0);
-                    if (filePath)
-                    {
-                        std::cout << "Selected image: " << filePath << std::endl;
-                        // TODO: load image via OpenCV and add to canvas
-                    }
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMainMenuBar();
-        }
-
         // Canvas - left side, fixed position
         ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
         ImGui::SetNextWindowSize(ImVec2(950, 700), ImGuiCond_Once);
         ImGui::Begin("Canvas", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-        canvas.draw();
+
+        // Draw floating "+" button in the top-left corner of the canvas
+        ImVec2 buttonPos = ImGui::GetCursorScreenPos();
+        if (ImGui::Button("+", ImVec2(30, 30)))
+        {
+            const char *filters[] = {"*.jpg", "*.png", "*.bmp", "*.jpeg"};
+            const char *filePath = tinyfd_openFileDialog("Select Image", "", 4, filters, NULL, 0);
+            if (filePath)
+            {
+                cv::Mat img = cv::imread(filePath, cv::IMREAD_UNCHANGED);
+                if (!img.empty())
+                {
+                    GLuint texID;
+                    glGenTextures(1, &texID);
+                    glBindTexture(GL_TEXTURE_2D, texID);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                    GLenum inputColorFormat = img.channels() == 4 ? GL_BGRA : GL_BGR;
+
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.cols, img.rows, 0, inputColorFormat, GL_UNSIGNED_BYTE, img.ptr());
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                    imageTextures[filePath] = texID;
+                }
+            }
+        }
+
+        for (const auto &[path, textureID] : imageTextures)
+        {
+            std::string filename = path.substr(path.find_last_of("/\\") + 1);
+            ImGui::Text("%s", filename.c_str());
+            ImTextureID tex_id = (ImTextureID)(uintptr_t)textureID;
+            ImGui::Image(tex_id, ImVec2(200, 200), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(0.2f, 0.2f, 0.2f, 1));
+        }
         ImGui::End();
 
         // Collapsible Properties Panel - right side
