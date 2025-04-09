@@ -1,29 +1,34 @@
 #include "ui/Canvas.h"
 #include <imgui.h>
 
-void Canvas::addNode(const std::shared_ptr<Node>& node) {
+void Canvas::addNode(const std::shared_ptr<Node> &node)
+{
     nodes.push_back(node);
 }
 
-void Canvas::addConnection(const std::shared_ptr<Connection>& connection) {
+void Canvas::addConnection(const std::shared_ptr<Connection> &connection)
+{
     connections.push_back(connection);
 }
 
-const std::vector<std::shared_ptr<Node>>& Canvas::getNodes() const {
+const std::vector<std::shared_ptr<Node>> &Canvas::getNodes() const
+{
     return nodes;
 }
 
-const std::vector<std::shared_ptr<Connection>>& Canvas::getConnections() const {
+const std::vector<std::shared_ptr<Connection>> &Canvas::getConnections() const
+{
     return connections;
 }
 
-void Canvas::draw() {
+void Canvas::draw()
+{
     // Canvas size
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
     ImVec2 canvasPos = ImGui::GetCursorScreenPos();
 
     // Background
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
     drawList->AddRectFilled(canvasPos,
                             ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y),
                             IM_COL32(40, 40, 40, 255));
@@ -41,17 +46,22 @@ void Canvas::draw() {
 
     // Mouse click = toggle selection
     ImVec2 mousePos = ImGui::GetIO().MousePos;
-    if (ImGui::IsMouseClicked(0)) {
+    if (ImGui::IsMouseClicked(0))
+    {
         if (mousePos.x >= nodeTopLeft.x && mousePos.x <= nodeBottomRight.x &&
-            mousePos.y >= nodeTopLeft.y && mousePos.y <= nodeBottomRight.y) {
+            mousePos.y >= nodeTopLeft.y && mousePos.y <= nodeBottomRight.y)
+        {
             demoNodeSelected = !demoNodeSelected;
-        } else {
+        }
+        else
+        {
             demoNodeSelected = false;
         }
     }
 
     // Drag node
-    if (demoNodeSelected && ImGui::IsMouseDragging(0)) {
+    if (demoNodeSelected && ImGui::IsMouseDragging(0))
+    {
         ImVec2 delta = ImGui::GetIO().MouseDelta;
         demoNodePos.x += delta.x;
         demoNodePos.y += delta.y;

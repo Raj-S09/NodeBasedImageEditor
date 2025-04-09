@@ -6,7 +6,7 @@
 class PropertiesPanel {
 public:
     void setSelectedNode(const std::shared_ptr<Node>& node);
-    void draw();  // Will hook into ImGui
+    void draw(const std::shared_ptr<Node>& selectedNode);
 
 private:
     std::shared_ptr<Node> selectedNode;

@@ -2,6 +2,8 @@
 #include <opencv2/opencv.hpp>
 #include <map>
 #include <string>
+#include <vector>
+#include <memory>
 
 // ImGui and backends
 #include <imgui.h>
@@ -12,10 +14,13 @@
 
 #include <GLFW/glfw3.h>
 #include <tinyfiledialogs.h>
+#include "core/Graph.h" // Include Graph header
 
 // UI components
 #include "ui/Canvas.h"
 #include "ui/PropertiesPanel.h"
+#include "core/Pin.h" // Include Pin header
+#include "nodes/ImageNode.h"
 
 int main()
 {
@@ -71,9 +76,10 @@ int main()
     std::cout << "NodeBasedImageEditor started successfully!" << std::endl;
 
     // UI state
-    Canvas canvas;
-    static std::map<std::string, GLuint> imageTextures;
-    PropertiesPanel propertiesPanel;
+    static std::vector<std::shared_ptr<Node>> nodes;
+    static std::shared_ptr<Node> selectedNode = nullptr;
+    static Graph graph; // Initialize graph
+    static PropertiesPanel propertiesPanel;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -111,17 +117,26 @@ int main()
 
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.cols, img.rows, 0, inputColorFormat, GL_UNSIGNED_BYTE, img.ptr());
                     glBindTexture(GL_TEXTURE_2D, 0);
-                    imageTextures[filePath] = texID;
+                    auto imageNode = std::make_shared<ImageNode>(nodes.size() + 1, filePath, texID);
+                    imageNode->setPosition(ImVec2(50, 50)); // default placement
+                    graph.addNode(imageNode);               // Use graph to add node
                 }
             }
         }
 
-        for (const auto &[path, textureID] : imageTextures)
+        for (auto &node : graph.getNodes()) // Use graph to get nodes
         {
-            std::string filename = path.substr(path.find_last_of("/\\") + 1);
-            ImGui::Text("%s", filename.c_str());
-            ImTextureID tex_id = (ImTextureID)(uintptr_t)textureID;
-            ImGui::Image(tex_id, ImVec2(200, 200), ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 1), ImVec4(0.2f, 0.2f, 0.2f, 1));
+            ImGui::PushID(node->getId());
+            ImGui::BeginGroup();
+            node->draw();
+
+            if (ImGui::IsItemClicked())
+            {
+                selectedNode = node;
+            }
+
+            ImGui::EndGroup();
+            ImGui::PopID();
         }
         ImGui::End();
 
@@ -132,8 +147,29 @@ int main()
         ImGui::Begin("Properties", &showProperties, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
         if (showProperties)
         {
-            propertiesPanel.draw();
+            propertiesPanel.draw(selectedNode);
         }
+        ImGui::End();
+
+        // Render Output
+        ImGui::Begin("Output");
+
+        cv::Mat resultImage = graph.render();
+        if (!resultImage.empty())
+        {
+            GLuint resultTex;
+            glGenTextures(1, &resultTex);
+            glBindTexture(GL_TEXTURE_2D, resultTex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            GLenum format = resultImage.channels() == 4 ? GL_BGRA : GL_BGR;
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resultImage.cols, resultImage.rows, 0, format, GL_UNSIGNED_BYTE, resultImage.ptr());
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            ImGui::Image((ImTextureID)(intptr_t)resultTex, ImVec2(300, 300));
+        }
+
         ImGui::End();
 
         // Render UI

@@ -40,6 +40,7 @@ file(GLOB IMGUI_SRC
 file(GLOB_RECURSE SRC_FILES
     src/core/*.cpp
     src/ui/*.cpp
+    src/nodes/*.cpp
     src/main.cpp
     external/tinyfiledialogs/tinyfiledialogs.c
 )
